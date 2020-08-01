@@ -6,24 +6,28 @@
 df <- read.csv("VF_data.csv", sep = ";", dec = ",")
 
 library(psych)
+library(ggplot2)
 describe(df)
 
-summary(lm(Y~K*L, df))
+fit <- lm(LN_Y~LN_K+LN_L, df)
+summary(fit)
+df$fitted <- fit$fitted.values
 
-summary(lm(LN_Y~LN_K*LN_L, df))
-
-ggplot(data = df, aes(LN_Y, LN_K)) +
-  geom_point() + 
+ggplot(data = df, aes(y = LN_Y, x = year)) +
+  geom_point() +
+  geom_line(aes(x = year, y = fitted), col = 'red', lwd=1) +
   geom_smooth()
-
-ggplot(data = df, aes(LN_Y, LN_L)) +
-  geom_point() + 
-  geom_smooth()
-
-library(micEcon)
-estResult <- translogEst(yName =  "Y", xNames = c("K", "L"), data = df)
-fitted <- cobbDouglasCalc( c("K", "L"), df, coef(estResult)[1:3])
 
 library(lmtest)
 
-dwtest(formula = LN_Y~LN_K:LN_L, data = df)
+dwtest(fit)
+# waldtest(fit)
+# bptest(fit)
+
+library(car)
+vif(fit)
+
+library(mctest)
+imcdiag(fit)
+mc.plot(fit)
+mctest(fit)
